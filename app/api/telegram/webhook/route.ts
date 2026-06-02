@@ -54,6 +54,9 @@ export async function POST(req: NextRequest) {
       max_tokens: 256,
       system:
         'Extract all stock, ETF, or crypto ticker symbols from the content. ' +
+        'Tickers may appear as $TICKER (cashtag, common on Twitter/finance social media), plain uppercase, or mentioned by name. ' +
+        'Strip any leading $ sign from results. ' +
+        'The content may be in any language — focus on ticker symbols, not language. ' +
         'Return ONLY a valid JSON array of uppercase ticker strings, e.g. ["AAPL","TSLA"]. ' +
         'If none are found, return []. No explanation.',
       messages: [{ role: 'user', content: claudeContent }],
