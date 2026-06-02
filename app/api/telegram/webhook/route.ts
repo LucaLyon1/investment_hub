@@ -50,12 +50,13 @@ export async function POST(req: NextRequest) {
 
     // One-shot Claude call — no agentic loop needed for simple extraction
     const response = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
+      model: 'claude-sonnet-4-6',
       max_tokens: 256,
       system:
         'Extract all stock, ETF, or crypto ticker symbols from the content. ' +
-        'Tickers may appear as $TICKER (cashtag, common on Twitter/finance social media), plain uppercase, or mentioned by name. ' +
-        'Strip any leading $ sign from results. ' +
+        'RULE 1: Any word immediately preceded by a $ sign is a cashtag — treat it as a ticker and include it unconditionally, regardless of length, format, or whether you recognize it (e.g. $SU, $LR, $2CRSI are all valid tickers). ' +
+        'RULE 2: Also extract tickers that appear as plain uppercase or are implied by company names. ' +
+        'Strip any leading $ sign from results. Uppercase all results. ' +
         'The content may be in any language — focus on ticker symbols, not language. ' +
         'Return ONLY a valid JSON array of uppercase ticker strings, e.g. ["AAPL","TSLA"]. ' +
         'If none are found, return []. No explanation.',
