@@ -3,11 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node scripts/migrate.mjs && next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "node scripts/migrate.mjs && next start",
     "lint": "eslint",
-    "db:migrate": "node scripts/migrate.mjs"
+    "db:migrate": "node scripts/migrate.mjs",
+    "deploy": "git pull && npm run build && pm2 restart investment-hub"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.100.1",
