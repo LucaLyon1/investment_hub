@@ -5,7 +5,7 @@ import { mkdirSync } from 'fs'
 import { dirname, resolve } from 'path'
 import { fileURLToPath } from 'url'
 
-const dbPath = process.env.DATABASE_URL ?? '/data/investment.db'
+const dbPath = process.env.DATABASE_URL ?? './data/investment.db'
 mkdirSync(dirname(dbPath), { recursive: true })
 
 const sqlite = new Database(dbPath)
