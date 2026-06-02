@@ -5,4 +5,5 @@ CREATE TABLE `watchlist` (
 	`source` text,
 	`added_at` integer NOT NULL
 );
+--> statement-breakpoint
 CREATE UNIQUE INDEX `watchlist_ticker_unique` ON `watchlist` (`ticker`);
