@@ -1,12 +1,14 @@
 import { NextRequest } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
 import { nanoid } from 'nanoid'
 import { db } from '@/lib/db'
 import { watchlist } from '@/lib/db/schema'
 import { sendTelegramMessage } from '@/lib/notifications/telegram'
 import { getMarketProvider } from '@/lib/market'
 
-const client = new Anthropic()
+function extractTickers(text: string): string[] {
+  const matches = text.match(/\$([A-Z0-9]{1,10})/gi) ?? []
+  return [...new Set(matches.map((m) => m.slice(1).toUpperCase()))]
+}
 
 // Always return 200 — Telegram retries non-200 responses for up to 48 hours
 export async function POST(req: NextRequest) {
@@ -24,53 +26,14 @@ export async function POST(req: NextRequest) {
     // Guard 2: only accept messages from the configured chat
     if (message.chat?.id?.toString() !== process.env.TELEGRAM_CHAT_ID) return ok()
 
-    let claudeContent: Anthropic.MessageParam['content']
+    const text = message.text ?? message.caption ?? ''
 
-    if (message.photo) {
-      // Get largest photo variant, download it and send as base64 to Claude vision
-      const photo = message.photo[message.photo.length - 1]
-      const fileRes = await fetch(
-        `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/getFile?file_id=${photo.file_id}`
-      )
-      const fileData = await fileRes.json()
-      const imgRes = await fetch(
-        `https://api.telegram.org/file/bot${process.env.TELEGRAM_BOT_TOKEN}/${fileData.result.file_path}`
-      )
-      const base64 = Buffer.from(await imgRes.arrayBuffer()).toString('base64')
-      claudeContent = [
-        { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64 } },
-        { type: 'text', text: message.caption ?? 'Extract tickers from this image.' },
-      ]
-    } else if (message.text) {
-      claudeContent = message.text
-    } else {
-      await sendTelegramMessage("Send me text or an image and I'll extract the tickers.")
+    if (!message.text && !message.caption) {
+      await sendTelegramMessage("Send me text with $TICKER symbols and I'll add them to your watchlist.")
       return ok()
     }
 
-    // One-shot Claude call — no agentic loop needed for simple extraction
-    const response = await client.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 256,
-      system:
-        'Extract all stock, ETF, or crypto ticker symbols from the content. ' +
-        'RULE 1: Any word immediately preceded by a $ sign is a cashtag — treat it as a ticker and include it unconditionally, regardless of length, format, or whether you recognize it (e.g. $SU, $LR, $2CRSI are all valid tickers). ' +
-        'RULE 2: Also extract tickers that appear as plain uppercase or are implied by company names. ' +
-        'Strip any leading $ sign from results. Uppercase all results. ' +
-        'The content may be in any language — focus on ticker symbols, not language. ' +
-        'Return ONLY a valid JSON array of uppercase ticker strings, e.g. ["AAPL","TSLA"]. ' +
-        'If none are found, return []. No explanation.',
-      messages: [{ role: 'user', content: claudeContent }],
-    })
-
-    const raw = response.content[0].type === 'text' ? response.content[0].text.trim() : '[]'
-    let tickers: string[] = []
-    try {
-      const parsed = JSON.parse(raw)
-      if (Array.isArray(parsed)) tickers = parsed.filter((t) => typeof t === 'string')
-    } catch {
-      // Claude returned something unparseable — treat as no tickers found
-    }
+    const tickers = extractTickers(text)
 
     if (tickers.length === 0) {
       await sendTelegramMessage('No tickers found in that message.')
