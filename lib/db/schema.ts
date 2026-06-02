@@ -72,6 +72,14 @@ export const rssFeeds = sqliteTable('rss_feeds', {
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 })
 
+export const watchlist = sqliteTable('watchlist', {
+  id: text('id').primaryKey(),
+  ticker: text('ticker').notNull().unique(),
+  name: text('name'),
+  source: text('source'),
+  addedAt: integer('added_at', { mode: 'timestamp' }).notNull(),
+})
+
 export type RssFeed = typeof rssFeeds.$inferSelect
 export type NewRssFeed = typeof rssFeeds.$inferInsert
 
@@ -81,3 +89,4 @@ export type PriceCache = typeof priceCache.$inferSelect
 export type PortfolioSnapshot = typeof portfolioSnapshots.$inferSelect
 export type AiIdea = typeof aiIdeas.$inferSelect
 export type NewAiIdea = typeof aiIdeas.$inferInsert
+export type WatchlistItem = typeof watchlist.$inferSelect

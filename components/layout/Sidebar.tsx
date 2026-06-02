@@ -7,6 +7,7 @@ const NAV = [
   { href: '/dashboard', label: 'Dashboard', icon: '◉' },
   { href: '/positions', label: 'Positions', icon: '⊞' },
   { href: '/ideas', label: 'AI Ideas', icon: '✦' },
+  { href: '/watchlist', label: 'Watchlist', icon: '◎' },
   { href: '/feeds', label: 'RSS Feeds', icon: '⊕' },
   { href: '/settings', label: 'Settings', icon: '⚙' },
 ]
