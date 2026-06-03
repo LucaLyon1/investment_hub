@@ -70,8 +70,9 @@ export async function runAgent(
 
   // Agentic loop
   while (true) {
+    const model = mode === 'research' ? 'claude-opus-4-8' : 'claude-sonnet-4-6'
     const response = await client.messages.create({
-      model: 'claude-sonnet-4-6',
+      model,
       max_tokens: 4096,
       system: systemPrompt,
       tools: TOOL_DEFINITIONS,

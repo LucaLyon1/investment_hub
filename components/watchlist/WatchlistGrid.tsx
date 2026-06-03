@@ -122,9 +122,9 @@ function WatchlistCard({ card, onRemove, onAddToPortfolio }: { card: WatchlistCa
         </div>
       </div>
 
-      {/* AI reason */}
+      {/* AI research */}
       {card.aiReason && (
-        <p className="text-xs text-zinc-600 leading-relaxed border-l-2 border-zinc-200 pl-3">
+        <p className="text-xs text-zinc-600 leading-relaxed border-l-2 border-zinc-200 pl-3 whitespace-pre-wrap">
           {card.aiReason}
         </p>
       )}
