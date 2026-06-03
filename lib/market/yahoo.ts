@@ -1,5 +1,5 @@
 import YahooFinance from 'yahoo-finance2'
-import type { IMarketProvider, QuoteResult, HistoryPoint, NewsItem } from './provider'
+import type { IMarketProvider, QuoteResult, HistoryPoint, NewsItem, PerformanceResult } from './provider'
 
 const yahooFinance = new YahooFinance()
 
@@ -17,6 +17,10 @@ export class YahooFinanceProvider implements IMarketProvider {
       low52w: quote.fiftyTwoWeekLow,
       marketCap: quote.marketCap,
       currency: quote.currency ?? 'USD',
+      trailingPE: quote.trailingPE,
+      forwardPE: quote.forwardPE,
+      epsTrailing: quote.epsTrailingTwelveMonths,
+      priceToBook: quote.priceToBook,
     }
   }
 
@@ -39,6 +43,22 @@ export class YahooFinanceProvider implements IMarketProvider {
         date: new Date(q.date).toISOString().split('T')[0],
         close: q.close,
       }))
+  }
+
+  async getPerformance(ticker: string): Promise<PerformanceResult> {
+    try {
+      const history = await this.getHistory(ticker, '3mo')
+      if (history.length < 2) return {}
+      const latest = history[history.length - 1].close
+      const ago1m = history[Math.max(0, history.length - 22)]?.close
+      const ago3m = history[0].close
+      return {
+        perf1m: ago1m ? ((latest - ago1m) / ago1m) * 100 : undefined,
+        perf3m: ago3m ? ((latest - ago3m) / ago3m) * 100 : undefined,
+      }
+    } catch {
+      return {}
+    }
   }
 
   async searchNews(query: string, maxResults = 5): Promise<NewsItem[]> {

@@ -10,4 +10,4 @@ export function getMarketProvider(): IMarketProvider {
   return _provider
 }
 
-export type { IMarketProvider, QuoteResult, HistoryPoint, NewsItem } from './provider'
+export type { IMarketProvider, QuoteResult, HistoryPoint, NewsItem, PerformanceResult } from './provider'

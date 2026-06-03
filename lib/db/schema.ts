@@ -77,6 +77,7 @@ export const watchlist = sqliteTable('watchlist', {
   ticker: text('ticker').notNull().unique(),
   name: text('name'),
   source: text('source'),
+  aiReason: text('ai_reason'),
   addedAt: integer('added_at', { mode: 'timestamp' }).notNull(),
 })
 
