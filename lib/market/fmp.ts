@@ -71,10 +71,10 @@ export class FmpProvider implements IMarketProvider {
     // FMP supports comma-separated batch: /v3/quote/AAPL,GOOG,...
     const data = await fmpFetch<FmpQuote[]>(`/v3/quote/${tickers.join(',')}`)
     const bySymbol = new Map(data.map((q) => [q.symbol, q]))
-    return tickers.map((t) => {
+    // Skip tickers not returned by FMP rather than throwing and failing the whole batch
+    return tickers.flatMap((t) => {
       const q = bySymbol.get(t)
-      if (!q) throw new Error(`No FMP data for ${t}`)
-      return mapQuote(t, q)
+      return q ? [mapQuote(t, q)] : []
     })
   }
 

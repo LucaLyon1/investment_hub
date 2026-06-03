@@ -28,7 +28,8 @@ export class YahooFinanceProvider implements IMarketProvider {
   }
 
   async getQuotes(tickers: string[]): Promise<QuoteResult[]> {
-    return Promise.all(tickers.map((t) => this.getQuote(t)))
+    const results = await Promise.allSettled(tickers.map((t) => this.getQuote(t)))
+    return results.flatMap((r) => r.status === 'fulfilled' ? [r.value] : [])
   }
 
   async getHistory(
