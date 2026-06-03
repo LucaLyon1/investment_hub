@@ -4,6 +4,7 @@ import { db } from '@/lib/db'
 import { watchlist } from '@/lib/db/schema'
 import { sendTelegramMessage } from '@/lib/notifications/telegram'
 import { getMarketProvider } from '@/lib/market'
+import { getMarketDataBatch } from '@/lib/market/cache'
 
 function extractTickers(text: string): string[] {
   const matches = text.match(/\$([A-Z0-9]{1,10})/gi) ?? []
@@ -63,7 +64,12 @@ export async function POST(req: NextRequest) {
           .onConflictDoNothing()
           .returning()
 
-        if (inserted.length > 0) addedTickers.push(ticker)
+        if (inserted.length > 0) {
+          addedTickers.push(ticker)
+          // Pre-warm the market data cache so data is ready on first page visit
+          // (avoids a second FMP call and guarantees data appears immediately)
+          getMarketDataBatch([ticker]).catch(() => {})
+        }
       })
     )
 
