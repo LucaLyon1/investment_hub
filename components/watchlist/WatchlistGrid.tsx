@@ -154,12 +154,30 @@ function WatchlistCard({ card, onRemove }: { card: WatchlistCardData; onRemove: 
         ) : (
           <span className="text-[11px] text-zinc-300">Added {card.addedAt.toLocaleDateString()}</span>
         )}
-        <button
-          onClick={onRemove}
-          className="text-xs text-zinc-400 hover:text-red-500 transition-colors shrink-0 ml-2"
-        >
-          Remove
-        </button>
+        <div className="flex items-center gap-2 shrink-0 ml-2">
+          <a
+            href={`https://www.tradingview.com/symbols/${card.ticker}/`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[11px] font-medium text-zinc-400 hover:text-blue-500 transition-colors"
+          >
+            TV
+          </a>
+          <a
+            href={`https://app.koyfin.com/share/chart/simple/${card.ticker}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[11px] font-medium text-zinc-400 hover:text-teal-500 transition-colors"
+          >
+            Koyfin
+          </a>
+          <button
+            onClick={onRemove}
+            className="text-xs text-zinc-400 hover:text-red-500 transition-colors"
+          >
+            Remove
+          </button>
+        </div>
       </div>
     </div>
   )
