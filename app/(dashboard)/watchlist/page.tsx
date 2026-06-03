@@ -9,6 +9,16 @@ import { WatchlistGrid } from '@/components/watchlist/WatchlistGrid'
 import { WatchlistRefresher } from '@/components/watchlist/WatchlistRefresher'
 import type { WatchlistCardData } from '@/components/watchlist/WatchlistGrid'
 
+// Handle cases where aiReason was incorrectly stored as a raw JSON string
+function parseAiReason(aiReason: string | null): string | null {
+  if (!aiReason) return null
+  try {
+    const parsed = JSON.parse(aiReason)
+    if (typeof parsed.reason === 'string') return parsed.reason
+  } catch {}
+  return aiReason
+}
+
 export default async function WatchlistPage() {
   const items = await db.select().from(watchlist).orderBy(desc(watchlist.addedAt))
 
@@ -48,7 +58,7 @@ export default async function WatchlistPage() {
       if (result.status === 'fulfilled') {
         return {
           ...item,
-          aiReason: result.value.reason ?? item.aiReason,
+          aiReason: result.value.reason ?? parseAiReason(item.aiReason),
           keywords: result.value.keywords.length
             ? JSON.stringify(result.value.keywords)
             : item.keywords,
@@ -66,7 +76,7 @@ export default async function WatchlistPage() {
       id: item.id,
       ticker: item.ticker,
       name: item.name ?? md?.name ?? null,
-      aiReason: item.aiReason ?? null,
+      aiReason: parseAiReason(item.aiReason),
       keywords,
       source: item.source ?? null,
       addedAt: item.addedAt,

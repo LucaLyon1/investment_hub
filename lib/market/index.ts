@@ -6,7 +6,7 @@ let _provider: IMarketProvider | null = null
 
 export function getMarketProvider(): IMarketProvider {
   if (!_provider) {
-    _provider = process.env.FMP_SECRETT ? new FmpProvider() : new YahooFinanceProvider()
+    _provider = process.env.FMP_SECRET ? new FmpProvider() : new YahooFinanceProvider()
   }
   return _provider
 }

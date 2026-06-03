@@ -67,15 +67,19 @@ Respond with only the JSON, no markdown.`,
   const raw = msg.content[0].type === 'text' ? msg.content[0].text.trim() : null
   if (!raw) return { reason: null, keywords: [] }
 
+  // Strip markdown code fences Claude sometimes adds despite instructions
+  const stripped = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim()
+
   let reason: string | null = null
   let keywords: string[] = []
 
   try {
-    const parsed = JSON.parse(raw)
-    reason = parsed.reason ?? null
+    const parsed = JSON.parse(stripped)
+    reason = typeof parsed.reason === 'string' ? parsed.reason : null
     keywords = Array.isArray(parsed.keywords) ? parsed.keywords.slice(0, 5) : []
   } catch {
-    reason = raw
+    // Not JSON at all — use raw text as the reason
+    reason = stripped
   }
 
   await db

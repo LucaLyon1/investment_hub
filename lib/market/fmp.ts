@@ -3,8 +3,8 @@ import type { IMarketProvider, QuoteResult, HistoryPoint, NewsItem, PerformanceR
 const BASE = 'https://financialmodelingprep.com/api'
 
 function apiKey(): string {
-  const key = process.env.FMP_SECRETT
-  if (!key) throw new Error('FMP_SECRETT not set')
+  const key = process.env.FMP_SECRET
+  if (!key) throw new Error('FMP_SECRET not set')
   return key
 }
 
