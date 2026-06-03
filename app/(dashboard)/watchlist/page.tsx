@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 import { db } from '@/lib/db'
 import { watchlist } from '@/lib/db/schema'
 import { desc } from 'drizzle-orm'
-import { getMarketProvider } from '@/lib/market'
+import { getMarketDataBatch } from '@/lib/market/cache'
 import { generateAiReason } from '@/app/actions/watchlist'
 import { WatchlistGrid } from '@/components/watchlist/WatchlistGrid'
 import type { WatchlistCardData } from '@/components/watchlist/WatchlistGrid'
@@ -27,16 +27,15 @@ export default async function WatchlistPage() {
     )
   }
 
-  const provider = getMarketProvider()
+  const tickers = items.map((item) => item.ticker)
 
   const needsEnrichment = items.filter((item) => !item.aiReason && item.source)
   const enrichmentPromises = needsEnrichment.map((item) =>
     generateAiReason(item.id, item.ticker, item.name ?? null, item.source ?? null)
   )
 
-  const [quotes, performances, enrichments] = await Promise.all([
-    Promise.allSettled(items.map((item) => provider.getQuote(item.ticker))),
-    Promise.allSettled(items.map((item) => provider.getPerformance(item.ticker))),
+  const [marketData, enrichments] = await Promise.all([
+    getMarketDataBatch(tickers),
     Promise.allSettled(enrichmentPromises),
   ])
 
@@ -58,30 +57,29 @@ export default async function WatchlistPage() {
     return item
   })
 
-  const cards: WatchlistCardData[] = enrichedItems.map((item, i) => {
-    const quote = quotes[i].status === 'fulfilled' ? quotes[i].value : null
-    const perf = performances[i].status === 'fulfilled' ? performances[i].value : null
+  const cards: WatchlistCardData[] = enrichedItems.map((item) => {
+    const md = marketData.get(item.ticker)
     const keywords = item.keywords ? (JSON.parse(item.keywords) as string[]) : []
 
     return {
       id: item.id,
       ticker: item.ticker,
-      name: item.name ?? quote?.name ?? null,
+      name: item.name ?? md?.name ?? null,
       aiReason: item.aiReason ?? null,
       keywords,
       source: item.source ?? null,
       addedAt: item.addedAt,
-      price: quote?.price ?? null,
-      change1d: quote?.changePct1d ?? null,
-      perf1m: perf?.perf1m ?? null,
-      perf3m: perf?.perf3m ?? null,
-      marketCap: quote?.marketCap ?? null,
-      trailingPE: quote?.trailingPE ?? null,
-      forwardPE: quote?.forwardPE ?? null,
-      epsTrailing: quote?.epsTrailing ?? null,
-      high52w: quote?.high52w ?? null,
-      low52w: quote?.low52w ?? null,
-      currency: quote?.currency ?? 'USD',
+      price: md?.price ?? null,
+      change1d: md?.changePct1d ?? null,
+      perf1m: md?.perf1m ?? null,
+      perf3m: md?.perf3m ?? null,
+      marketCap: md?.marketCap ?? null,
+      trailingPE: md?.trailingPE ?? null,
+      forwardPE: null,
+      epsTrailing: md?.epsTrailing ?? null,
+      high52w: md?.high52w ?? null,
+      low52w: md?.low52w ?? null,
+      currency: md?.currency ?? 'USD',
     }
   })
 

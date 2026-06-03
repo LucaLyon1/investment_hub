@@ -82,6 +82,26 @@ export const watchlist = sqliteTable('watchlist', {
   addedAt: integer('added_at', { mode: 'timestamp' }).notNull(),
 })
 
+export const marketDataCache = sqliteTable('market_data_cache', {
+  ticker: text('ticker').primaryKey(),
+  name: text('name'),
+  currency: text('currency').notNull().default('USD'),
+  exchange: text('exchange'),
+  price: real('price'),
+  change1d: real('change_1d'),
+  changePct1d: real('change_pct_1d'),
+  high52w: real('high_52w'),
+  low52w: real('low_52w'),
+  marketCap: real('market_cap'),
+  trailingPE: real('trailing_pe'),
+  epsTrailing: real('eps_trailing'),
+  perf1m: real('perf_1m'),
+  perf3m: real('perf_3m'),
+  fetchedAt: integer('fetched_at', { mode: 'timestamp' }).notNull(),
+})
+
+export type MarketDataCacheRow = typeof marketDataCache.$inferSelect
+
 export type RssFeed = typeof rssFeeds.$inferSelect
 export type NewRssFeed = typeof rssFeeds.$inferInsert
 
