@@ -6,6 +6,7 @@ import { desc } from 'drizzle-orm'
 import { getMarketDataBatch } from '@/lib/market/cache'
 import { generateAiReason } from '@/app/actions/watchlist'
 import { WatchlistGrid } from '@/components/watchlist/WatchlistGrid'
+import { WatchlistRefresher } from '@/components/watchlist/WatchlistRefresher'
 import type { WatchlistCardData } from '@/components/watchlist/WatchlistGrid'
 
 export default async function WatchlistPage() {
@@ -92,9 +93,12 @@ export default async function WatchlistPage() {
             Tickers from your Telegram bot — with live data and AI context.
           </p>
         </div>
-        <span className="text-xs text-zinc-400 pb-1">
-          {items.length} ticker{items.length !== 1 ? 's' : ''}
-        </span>
+        <div className="flex items-center gap-4 pb-1">
+          <WatchlistRefresher />
+          <span className="text-xs text-zinc-400">
+            {items.length} ticker{items.length !== 1 ? 's' : ''}
+          </span>
+        </div>
       </div>
 
       <WatchlistGrid cards={cards} />

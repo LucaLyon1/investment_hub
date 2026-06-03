@@ -1,7 +1,7 @@
 import YahooFinance from 'yahoo-finance2'
 import type { IMarketProvider, QuoteResult, HistoryPoint, NewsItem, PerformanceResult } from './provider'
 
-const yahooFinance = new YahooFinance()
+const yahooFinance = new YahooFinance({ validation: { logErrors: false } })
 
 export class YahooFinanceProvider implements IMarketProvider {
   async getQuote(ticker: string): Promise<QuoteResult> {

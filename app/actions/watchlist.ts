@@ -2,9 +2,17 @@
 
 import { db } from '@/lib/db'
 import { watchlist, positions, marketDataCache } from '@/lib/db/schema'
-import { eq } from 'drizzle-orm'
+import { eq, inArray } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import Anthropic from '@anthropic-ai/sdk'
+
+export async function refreshWatchlistData(): Promise<void> {
+  const items = await db.select({ ticker: watchlist.ticker }).from(watchlist)
+  if (items.length === 0) return
+  const tickers = items.map((i) => i.ticker)
+  await db.delete(marketDataCache).where(inArray(marketDataCache.ticker, tickers))
+  revalidatePath('/watchlist')
+}
 
 export async function removeFromWatchlist(id: string) {
   const [item] = await db.select({ ticker: watchlist.ticker }).from(watchlist).where(eq(watchlist.id, id))
