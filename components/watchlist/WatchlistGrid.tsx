@@ -1,7 +1,8 @@
 'use client'
 
-import { useTransition } from 'react'
+import { useTransition, useState } from 'react'
 import { removeFromWatchlist } from '@/app/actions/watchlist'
+import { AddPositionForm } from '@/components/portfolio/AddPositionForm'
 
 export interface WatchlistCardData {
   id: string
@@ -97,7 +98,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   )
 }
 
-function WatchlistCard({ card, onRemove }: { card: WatchlistCardData; onRemove: () => void }) {
+function WatchlistCard({ card, onRemove, onAddToPortfolio }: { card: WatchlistCardData; onRemove: () => void; onAddToPortfolio: () => void }) {
   const changeColor = card.change1d == null ? 'text-zinc-400' : card.change1d >= 0 ? 'text-emerald-600' : 'text-red-500'
 
   return (
@@ -172,6 +173,12 @@ function WatchlistCard({ card, onRemove }: { card: WatchlistCardData; onRemove: 
             Koyfin
           </a>
           <button
+            onClick={onAddToPortfolio}
+            className="text-xs text-zinc-400 hover:text-indigo-600 transition-colors"
+          >
+            + Portfolio
+          </button>
+          <button
             onClick={onRemove}
             className="text-xs text-zinc-400 hover:text-red-500 transition-colors"
           >
@@ -185,16 +192,51 @@ function WatchlistCard({ card, onRemove }: { card: WatchlistCardData; onRemove: 
 
 export function WatchlistGrid({ cards }: { cards: WatchlistCardData[] }) {
   const [isPending, startTransition] = useTransition()
+  const [addingCard, setAddingCard] = useState<WatchlistCardData | null>(null)
 
   return (
-    <div className={`grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 transition-opacity ${isPending ? 'opacity-60' : ''}`}>
-      {cards.map((card) => (
-        <WatchlistCard
-          key={card.id}
-          card={card}
-          onRemove={() => startTransition(() => removeFromWatchlist(card.id))}
-        />
-      ))}
-    </div>
+    <>
+      <div className={`grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 transition-opacity ${isPending ? 'opacity-60' : ''}`}>
+        {cards.map((card) => (
+          <WatchlistCard
+            key={card.id}
+            card={card}
+            onRemove={() => startTransition(() => removeFromWatchlist(card.id))}
+            onAddToPortfolio={() => setAddingCard(card)}
+          />
+        ))}
+      </div>
+
+      {addingCard && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          onClick={(e) => { if (e.target === e.currentTarget) setAddingCard(null) }}
+        >
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 space-y-5">
+            <div className="flex items-center justify-between">
+              <h2 className="text-base font-semibold text-zinc-900">
+                Add {addingCard.ticker} to Portfolio
+              </h2>
+              <button
+                onClick={() => setAddingCard(null)}
+                className="text-zinc-400 hover:text-zinc-700 text-lg leading-none transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+            <AddPositionForm
+              defaultValues={{
+                ticker: addingCard.ticker,
+                name: addingCard.name ?? '',
+                assetClass: 'stock',
+                currency: addingCard.currency,
+                avgBuyPrice: addingCard.price ?? undefined,
+              }}
+              onSuccess={() => setAddingCard(null)}
+            />
+          </div>
+        </div>
+      )}
+    </>
   )
 }

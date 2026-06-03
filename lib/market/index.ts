@@ -1,11 +1,12 @@
 import { YahooFinanceProvider } from './yahoo'
+import { FmpProvider } from './fmp'
 import type { IMarketProvider } from './provider'
 
 let _provider: IMarketProvider | null = null
 
 export function getMarketProvider(): IMarketProvider {
   if (!_provider) {
-    _provider = new YahooFinanceProvider()
+    _provider = process.env.FMP_SECRETT ? new FmpProvider() : new YahooFinanceProvider()
   }
   return _provider
 }

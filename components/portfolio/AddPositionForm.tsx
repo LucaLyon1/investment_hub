@@ -15,9 +15,16 @@ const CURRENCIES = ['USD', 'EUR', 'GBP', 'JPY', 'CHF']
 
 interface Props {
   onSuccess?: () => void
+  defaultValues?: {
+    ticker?: string
+    name?: string
+    assetClass?: string
+    currency?: string
+    avgBuyPrice?: number
+  }
 }
 
-export function AddPositionForm({ onSuccess }: Props) {
+export function AddPositionForm({ onSuccess, defaultValues }: Props) {
   const [state, action, pending] = useActionState(createPosition, null)
   const [submitted, setSubmitted] = useState(false)
 
@@ -35,6 +42,7 @@ export function AddPositionForm({ onSuccess }: Props) {
             name="ticker"
             placeholder="AAPL"
             required
+            defaultValue={defaultValues?.ticker}
             className="w-full rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:bg-white transition-colors uppercase"
           />
         </div>
@@ -44,6 +52,7 @@ export function AddPositionForm({ onSuccess }: Props) {
             name="name"
             placeholder="Apple Inc."
             required
+            defaultValue={defaultValues?.name ?? ''}
             className="w-full rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:bg-white transition-colors"
           />
         </div>
@@ -55,6 +64,7 @@ export function AddPositionForm({ onSuccess }: Props) {
           <select
             name="assetClass"
             required
+            defaultValue={defaultValues?.assetClass ?? ''}
             className="w-full rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2.5 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:bg-white transition-colors"
           >
             <option value="" disabled>Select asset class…</option>
@@ -69,7 +79,7 @@ export function AddPositionForm({ onSuccess }: Props) {
           <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wide mb-1.5">Currency</label>
           <select
             name="currency"
-            defaultValue="USD"
+            defaultValue={defaultValues?.currency ?? 'USD'}
             className="w-full rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2.5 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:bg-white transition-colors"
           >
             {CURRENCIES.map((c) => (
@@ -103,6 +113,7 @@ export function AddPositionForm({ onSuccess }: Props) {
             min="0"
             placeholder="150.00"
             required
+            defaultValue={defaultValues?.avgBuyPrice}
             className="w-full rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:bg-white transition-colors"
           />
         </div>
