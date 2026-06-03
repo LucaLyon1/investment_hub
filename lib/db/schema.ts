@@ -78,6 +78,7 @@ export const watchlist = sqliteTable('watchlist', {
   name: text('name'),
   source: text('source'),
   aiReason: text('ai_reason'),
+  keywords: text('keywords'),
   addedAt: integer('added_at', { mode: 'timestamp' }).notNull(),
 })
 

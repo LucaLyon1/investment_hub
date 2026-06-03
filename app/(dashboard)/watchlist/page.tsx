@@ -29,44 +29,46 @@ export default async function WatchlistPage() {
 
   const provider = getMarketProvider()
 
-  // Generate AI reasons for items that don't have one yet (fire-and-forget per item)
-  const aiReasonPromises = items
-    .filter((item) => !item.aiReason && item.source)
-    .map((item) => generateAiReason(item.id, item.ticker, item.name ?? null, item.source ?? null))
+  const needsEnrichment = items.filter((item) => !item.aiReason && item.source)
+  const enrichmentPromises = needsEnrichment.map((item) =>
+    generateAiReason(item.id, item.ticker, item.name ?? null, item.source ?? null)
+  )
 
-  // Fetch quotes and performance in parallel across all tickers
-  const [quotes, performances] = await Promise.all([
+  const [quotes, performances, enrichments] = await Promise.all([
     Promise.allSettled(items.map((item) => provider.getQuote(item.ticker))),
     Promise.allSettled(items.map((item) => provider.getPerformance(item.ticker))),
+    Promise.allSettled(enrichmentPromises),
   ])
 
-  // Wait for AI reasons (needed to display them)
-  const aiReasons = await Promise.allSettled(aiReasonPromises)
-
-  // Map AI reasons back to items that needed them
-  let aiReasonIdx = 0
-  const itemsWithUpdatedReasons = items.map((item) => {
+  // Merge freshly generated enrichment back onto items
+  let enrichIdx = 0
+  const enrichedItems = items.map((item) => {
     if (!item.aiReason && item.source) {
-      const result = aiReasons[aiReasonIdx++]
-      return {
-        ...item,
-        aiReason: result.status === 'fulfilled' ? (result.value ?? item.aiReason) : item.aiReason,
+      const result = enrichments[enrichIdx++]
+      if (result.status === 'fulfilled') {
+        return {
+          ...item,
+          aiReason: result.value.reason ?? item.aiReason,
+          keywords: result.value.keywords.length
+            ? JSON.stringify(result.value.keywords)
+            : item.keywords,
+        }
       }
     }
     return item
   })
 
-  const cards: WatchlistCardData[] = itemsWithUpdatedReasons.map((item, i) => {
-    const quoteResult = quotes[i]
-    const perfResult = performances[i]
-    const quote = quoteResult.status === 'fulfilled' ? quoteResult.value : null
-    const perf = perfResult.status === 'fulfilled' ? perfResult.value : null
+  const cards: WatchlistCardData[] = enrichedItems.map((item, i) => {
+    const quote = quotes[i].status === 'fulfilled' ? quotes[i].value : null
+    const perf = performances[i].status === 'fulfilled' ? performances[i].value : null
+    const keywords = item.keywords ? (JSON.parse(item.keywords) as string[]) : []
 
     return {
       id: item.id,
       ticker: item.ticker,
       name: item.name ?? quote?.name ?? null,
       aiReason: item.aiReason ?? null,
+      keywords,
       source: item.source ?? null,
       addedAt: item.addedAt,
       price: quote?.price ?? null,
@@ -80,9 +82,6 @@ export default async function WatchlistPage() {
       high52w: quote?.high52w ?? null,
       low52w: quote?.low52w ?? null,
       currency: quote?.currency ?? 'USD',
-      quoteType: quote?.quoteType ?? null,
-      sector: quote?.sector ?? null,
-      exchange: quote?.exchange ?? null,
     }
   })
 
