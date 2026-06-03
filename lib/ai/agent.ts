@@ -8,12 +8,13 @@ import {
   buildIdeasSystemPrompt,
   buildRecapSystemPrompt,
   buildAnalyzeSystemPrompt,
+  buildResearchSystemPrompt,
 } from './prompts'
 import { TOOL_DEFINITIONS, executeTool } from './tools'
 
 const client = new Anthropic()
 
-export type AgentMode = 'ideas' | 'morning_recap' | 'analyze'
+export type AgentMode = 'ideas' | 'morning_recap' | 'analyze' | 'research'
 
 export interface AgentResult {
   text: string
@@ -42,6 +43,7 @@ function buildSystemPrompt(mode: AgentMode): string {
   const date = new Date().toISOString().split('T')[0]
   if (mode === 'ideas') return buildIdeasSystemPrompt(date)
   if (mode === 'morning_recap') return buildRecapSystemPrompt(date)
+  if (mode === 'research') return buildResearchSystemPrompt(date)
   return buildAnalyzeSystemPrompt(date)
 }
 
