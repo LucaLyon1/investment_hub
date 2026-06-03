@@ -80,6 +80,9 @@ export default async function WatchlistPage() {
       high52w: quote?.high52w ?? null,
       low52w: quote?.low52w ?? null,
       currency: quote?.currency ?? 'USD',
+      quoteType: quote?.quoteType ?? null,
+      sector: quote?.sector ?? null,
+      exchange: quote?.exchange ?? null,
     }
   })
 

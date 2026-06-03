@@ -21,6 +21,9 @@ export class YahooFinanceProvider implements IMarketProvider {
       forwardPE: quote.forwardPE,
       epsTrailing: quote.epsTrailingTwelveMonths,
       priceToBook: quote.priceToBook,
+      quoteType: quote.quoteType,
+      sector: quote.sector,
+      exchange: quote.fullExchangeName ?? quote.exchange,
     }
   }
 

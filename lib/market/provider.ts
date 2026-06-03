@@ -15,6 +15,10 @@ export interface QuoteResult {
   priceToBook?: number
   revenueTrailing?: number
   grossMargins?: number
+  // Classification
+  quoteType?: string
+  sector?: string
+  exchange?: string
 }
 
 export interface PerformanceResult {

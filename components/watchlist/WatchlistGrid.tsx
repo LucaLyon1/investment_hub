@@ -21,6 +21,67 @@ export interface WatchlistCardData {
   high52w: number | null
   low52w: number | null
   currency: string
+  quoteType: string | null
+  sector: string | null
+  exchange: string | null
+}
+
+// Sector → Tailwind bg + text classes
+const SECTOR_COLORS: Record<string, string> = {
+  'Technology':             'bg-blue-100 text-blue-700',
+  'Healthcare':             'bg-green-100 text-green-700',
+  'Financial Services':     'bg-indigo-100 text-indigo-700',
+  'Financials':             'bg-indigo-100 text-indigo-700',
+  'Energy':                 'bg-amber-100 text-amber-700',
+  'Consumer Cyclical':      'bg-purple-100 text-purple-700',
+  'Consumer Defensive':     'bg-teal-100 text-teal-700',
+  'Industrials':            'bg-slate-100 text-slate-700',
+  'Basic Materials':        'bg-lime-100 text-lime-700',
+  'Real Estate':            'bg-rose-100 text-rose-700',
+  'Utilities':              'bg-cyan-100 text-cyan-700',
+  'Communication Services': 'bg-violet-100 text-violet-700',
+}
+
+const QUOTE_TYPE_LABEL: Record<string, { label: string; cls: string }> = {
+  ETF:        { label: 'ETF',    cls: 'bg-emerald-100 text-emerald-700' },
+  MUTUALFUND: { label: 'Fund',   cls: 'bg-emerald-100 text-emerald-700' },
+  EQUITY:     { label: 'Stock',  cls: 'bg-zinc-100 text-zinc-600' },
+  INDEX:      { label: 'Index',  cls: 'bg-zinc-100 text-zinc-600' },
+  CRYPTOCURRENCY: { label: 'Crypto', cls: 'bg-orange-100 text-orange-700' },
+  FUTURE:     { label: 'Future', cls: 'bg-orange-100 text-orange-700' },
+}
+
+function Tag({ children, cls }: { children: string; cls: string }) {
+  return (
+    <span className={`inline-block px-2 py-0.5 rounded-full text-[11px] font-semibold leading-tight ${cls}`}>
+      {children}
+    </span>
+  )
+}
+
+function Tags({ quoteType, sector }: { quoteType: string | null; sector: string | null }) {
+  const tags: { label: string; cls: string }[] = []
+
+  if (quoteType) {
+    const qt = QUOTE_TYPE_LABEL[quoteType] ?? { label: quoteType, cls: 'bg-zinc-100 text-zinc-600' }
+    // Only show Stock tag if there's no sector (sector already implies stock)
+    if (quoteType !== 'EQUITY' || !sector) tags.push(qt)
+  }
+
+  if (sector) {
+    const cls = SECTOR_COLORS[sector] ?? 'bg-zinc-100 text-zinc-600'
+    tags.push({ label: sector, cls })
+  }
+
+  if (tags.length === 0) return null
+
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {tags.map((t) => (
+        <Tag key={t.label} cls={t.cls}>{t.label}</Tag>
+      ))}
+    </div>
+  )
 }
 
 function fmtPct(v: number | null) {
@@ -79,11 +140,12 @@ function WatchlistCard({ card, onRemove }: { card: WatchlistCardData; onRemove: 
     <div className="bg-white border border-zinc-200 rounded-xl shadow-sm flex flex-col gap-4 p-5">
       {/* Header */}
       <div className="flex items-start justify-between gap-2">
-        <div className="flex flex-col gap-0.5 min-w-0">
+        <div className="flex flex-col gap-1 min-w-0">
           <span className="text-lg font-bold text-zinc-900 leading-tight">{card.ticker}</span>
           {card.name && (
             <span className="text-xs text-zinc-500 truncate max-w-[180px]">{card.name}</span>
           )}
+          <Tags quoteType={card.quoteType} sector={card.sector} />
         </div>
         <div className="flex flex-col items-end shrink-0">
           <span className="text-base font-semibold text-zinc-900">
