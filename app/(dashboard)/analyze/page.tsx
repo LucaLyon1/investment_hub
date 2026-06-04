@@ -1,6 +1,11 @@
 import { StockAnalysisClient } from './StockAnalysisClient'
 
-export default function AnalyzePage() {
+interface Props {
+  searchParams: Promise<{ ticker?: string }>
+}
+
+export default async function AnalyzePage({ searchParams }: Props) {
+  const { ticker } = await searchParams
   return (
     <div className="space-y-6">
       <div>
@@ -9,7 +14,7 @@ export default function AnalyzePage() {
           Enter any ticker for an AI-powered deep dive — charts, fundamentals, bull/bear case, and a verdict.
         </p>
       </div>
-      <StockAnalysisClient />
+      <StockAnalysisClient initialTicker={ticker?.toUpperCase()} />
     </div>
   )
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useTransition } from 'react'
+import { useState, useEffect, useTransition, useRef } from 'react'
 import {
   AreaChart,
   Area,
@@ -390,14 +390,24 @@ function EpsChart({ history }: { history: EarningsQuarter[] }) {
 
 // ── Main component ─────────────────────────────────────────────────────────────
 
-export function StockAnalysisClient() {
-  const [ticker, setTicker] = useState('')
+export function StockAnalysisClient({ initialTicker }: { initialTicker?: string }) {
+  const [ticker, setTicker] = useState(initialTicker ?? '')
+  const didAutoRun = useRef(false)
   const [loading, setLoading] = useState(false)
   const [analysis, setAnalysis] = useState<StockAnalysis | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [watchlistId, setWatchlistId] = useState<string | null>(null)
   const [showPortfolioModal, setShowPortfolioModal] = useState(false)
   const [isPending, startTransition] = useTransition()
+
+  // Auto-run when arriving from watchlist with ?ticker=
+  useEffect(() => {
+    if (initialTicker && !didAutoRun.current) {
+      didAutoRun.current = true
+      runAnalysis(initialTicker)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Check watchlist status whenever analysis loads
   useEffect(() => {
@@ -418,9 +428,8 @@ export function StockAnalysisClient() {
     })
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!ticker.trim()) return
+  async function runAnalysis(symbol: string) {
+    if (!symbol.trim()) return
     setLoading(true)
     setError(null)
     setAnalysis(null)
@@ -428,7 +437,7 @@ export function StockAnalysisClient() {
       const res = await fetch('/api/ai/stock-analysis', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ticker: ticker.trim() }),
+        body: JSON.stringify({ ticker: symbol.trim() }),
       })
       const data = await res.json()
       if (!res.ok) setError(data.error ?? 'Unknown error')
@@ -438,6 +447,11 @@ export function StockAnalysisClient() {
     } finally {
       setLoading(false)
     }
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    runAnalysis(ticker)
   }
 
   const ov = analysis?.overview

@@ -1,6 +1,7 @@
 'use client'
 
 import { useTransition, useState } from 'react'
+import Link from 'next/link'
 import { removeFromWatchlist } from '@/app/actions/watchlist'
 import { AddPositionForm } from '@/components/portfolio/AddPositionForm'
 
@@ -149,40 +150,41 @@ function WatchlistCard({ card, onRemove, onAddToPortfolio }: { card: WatchlistCa
       </div>
 
       {/* Footer */}
-      <div className="flex items-center justify-between pt-1 border-t border-zinc-100">
-        {card.source ? (
-          <p className="text-[11px] text-zinc-400 italic truncate max-w-50">&ldquo;{card.source}&rdquo;</p>
-        ) : (
-          <span className="text-[11px] text-zinc-300">Added {card.addedAt.toLocaleDateString()}</span>
+      <div className="flex flex-col gap-3 pt-3 border-t border-zinc-100">
+        {/* Source note */}
+        {card.source && card.source !== 'Stock Analyzer' && (
+          <p className="text-[11px] text-zinc-400 italic truncate">&ldquo;{card.source}&rdquo;</p>
         )}
-        <div className="flex items-center gap-2 shrink-0 ml-2">
-          <a
-            href={`https://www.tradingview.com/symbols/${card.ticker}/`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[11px] font-medium text-zinc-400 hover:text-blue-500 transition-colors"
+
+        {/* Action buttons */}
+        <div className="flex items-center gap-2">
+          <Link
+            href={`/analyze?ticker=${card.ticker}`}
+            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700 transition-colors"
           >
-            TV
-          </a>
-          <a
-            href={`https://app.koyfin.com/share/chart/simple/${card.ticker}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[11px] font-medium text-zinc-400 hover:text-teal-500 transition-colors"
-          >
-            Koyfin
-          </a>
+            ⊛ Analyze
+          </Link>
           <button
             onClick={onAddToPortfolio}
-            className="text-xs text-zinc-400 hover:text-indigo-600 transition-colors"
+            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-zinc-200 bg-white text-zinc-700 text-xs font-medium hover:bg-zinc-50 hover:border-zinc-300 transition-colors"
           >
             + Portfolio
           </button>
+          <a
+            href={`https://www.tradingview.com/chart/?symbol=${card.ticker}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center px-3 py-2 rounded-lg border border-zinc-200 bg-white text-zinc-500 text-xs font-medium hover:bg-zinc-50 hover:text-zinc-700 transition-colors"
+            title="View on TradingView"
+          >
+            TV
+          </a>
           <button
             onClick={onRemove}
-            className="text-xs text-zinc-400 hover:text-red-500 transition-colors"
+            className="flex items-center justify-center px-3 py-2 rounded-lg border border-zinc-200 bg-white text-zinc-400 text-xs font-medium hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-colors"
+            title="Remove from watchlist"
           >
-            Remove
+            ✕
           </button>
         </div>
       </div>
