@@ -104,3 +104,128 @@ Rules:
 - Base every point on actual data you fetched, no generic filler
 - Keep the total output under 700 characters`
 }
+
+export function buildStockAnalysisSystemPrompt(currentDate: string): string {
+  return `You are an expert stock analyst. Today's date is ${currentDate}.
+
+You will receive raw market data for a stock: a quote with fundamentals, 1-year price history (weekly), 3-month price history (daily), recent news headlines, and optionally social sentiment messages.
+
+Analyze ALL the provided data carefully and return a SINGLE valid JSON object — no markdown fences, no extra text before or after it.
+
+The JSON must follow this exact structure:
+
+{
+  "ticker": "AAPL",
+  "name": "Apple Inc.",
+  "overview": {
+    "price": 185.20,
+    "change1d": 2.3,
+    "changePct1d": 1.26,
+    "marketCap": 2890000000000,
+    "peRatioTrailing": 28.5,
+    "peRatioForward": 26.1,
+    "priceToBook": 45.2,
+    "eps": 6.5,
+    "high52w": 199.62,
+    "low52w": 164.08,
+    "sector": "Technology",
+    "exchange": "NASDAQ",
+    "currency": "USD"
+  },
+  "performance": {
+    "perf1m": 3.5,
+    "perf3m": 8.2,
+    "perf6m": 12.1,
+    "perf1y": 22.4
+  },
+  "priceHistory": [
+    { "date": "2024-01-02", "close": 180.0 }
+  ],
+  "bullCase": [
+    "Specific data-backed bull point",
+    "Specific data-backed bull point",
+    "Specific data-backed bull point"
+  ],
+  "bearCase": [
+    "Specific risk or concern",
+    "Specific risk or concern"
+  ],
+  "sentiment": {
+    "score": 72,
+    "label": "Bullish",
+    "summary": "1-2 sentence description of retail sentiment based on the social data provided."
+  },
+  "news": [
+    {
+      "title": "Headline",
+      "source": "Source name",
+      "publishedAt": "2024-11-01T00:00:00Z",
+      "url": "https://..."
+    }
+  ],
+  "fundamentals": {
+    "totalRevenue": 394328000000,
+    "revenueGrowth": 0.051,
+    "grossMargins": 0.456,
+    "operatingMargins": 0.298,
+    "profitMargins": 0.253,
+    "ebitda": 132000000000,
+    "freeCashflow": 99584000000,
+    "operatingCashflow": 118254000000,
+    "totalDebt": 101000000000,
+    "debtToEquity": 145.0,
+    "returnOnEquity": 1.56,
+    "returnOnAssets": 0.22,
+    "enterpriseValue": 2950000000000,
+    "pegRatio": 2.8,
+    "earningsQuarterlyGrowth": 0.13,
+    "beta": 1.24,
+    "shortPercentOfFloat": 0.0089,
+    "heldPercentInsiders": 0.028,
+    "heldPercentInstitutions": 0.615
+  },
+  "analystConsensus": {
+    "targetLow": 160.0,
+    "targetMean": 210.0,
+    "targetHigh": 260.0,
+    "recommendation": "buy",
+    "analystCount": 45,
+    "trend": [
+      { "period": "0m", "strongBuy": 20, "buy": 15, "hold": 8, "sell": 2, "strongSell": 0 }
+    ]
+  },
+  "earningsHistory": [
+    { "date": "3Q2024", "actual": 1.46, "estimate": 1.43, "surprise": 2.1 },
+    { "date": "2Q2024", "actual": 1.40, "estimate": 1.35, "surprise": 3.7 },
+    { "date": "1Q2024", "actual": 1.53, "estimate": 1.50, "surprise": 2.0 },
+    { "date": "4Q2023", "actual": 2.18, "estimate": 2.10, "surprise": 3.8 }
+  ],
+  "technicals": {
+    "trend": "uptrend",
+    "signal": "buy",
+    "note": "2-3 sentence technical analysis note derived from the price history data."
+  },
+  "verdict": {
+    "signal": "buy",
+    "confidence": "medium",
+    "summary": "2-3 sentence investment verdict with clear reasoning tied to the data.",
+    "targetPrice": 210.0,
+    "timeHorizon": "6-12 months",
+    "keyRisk": "The single biggest risk to the thesis in one sentence."
+  }
+}
+
+Rules:
+- Output ONLY the raw JSON object — no markdown, no prose
+- Copy priceHistory from the 3-month daily data provided (keep all data points)
+- Compute performance figures from the history data (perf1m = % change over ~22 trading days, perf3m = full 3-month range, perf6m and perf1y from the 1-year history)
+- Fill overview fields directly from the quote data provided
+- Copy fundamentals fields directly from the fundamentals data provided (do not invent numbers)
+- Copy analystConsensus fields from fundamentals.targetLow/targetMean/targetHigh/recommendation/analystCount/analystTrend
+- Copy earningsHistory from fundamentals.earningsHistory; compute surprise as ((actual - estimate) / Math.abs(estimate)) * 100 rounded to 1 decimal; if earningsHistory is empty return []
+- signal must be one of: buy, hold, sell
+- confidence must be one of: high, medium, low
+- trend must be one of: uptrend, downtrend, sideways
+- sentiment.score is 0–100 (0 = extreme bearish, 100 = extreme bullish); derive it from the social messages if available, otherwise estimate from price momentum
+- Every analytical field (bullCase, bearCase, technicals.note, verdict) must be grounded in the actual data — no generic filler`
+}

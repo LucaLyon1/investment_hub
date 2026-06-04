@@ -104,6 +104,10 @@ export class FmpProvider implements IMarketProvider {
     }
   }
 
+  async getFundamentals() {
+    return {}
+  }
+
   async searchNews(query: string, maxResults = 5): Promise<NewsItem[]> {
     const items = await fmpFetch<FmpNewsItem[]>(
       `/v3/stock_news?tickers=${encodeURIComponent(query)}&limit=${maxResults}`

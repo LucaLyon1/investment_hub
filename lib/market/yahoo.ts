@@ -1,5 +1,5 @@
 import YahooFinance from 'yahoo-finance2'
-import type { IMarketProvider, QuoteResult, HistoryPoint, NewsItem, PerformanceResult } from './provider'
+import type { IMarketProvider, QuoteResult, HistoryPoint, NewsItem, PerformanceResult, FundamentalsResult } from './provider'
 
 const yahooFinance = new YahooFinance({ validation: { logErrors: false } })
 
@@ -74,6 +74,74 @@ export class YahooFinanceProvider implements IMarketProvider {
       publishedAt: new Date(n.providerPublishTime * 1000).toISOString(),
       source: n.publisher,
     }))
+  }
+
+  async getFundamentals(ticker: string): Promise<FundamentalsResult> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const raw = await (yahooFinance as any).quoteSummary(ticker, {
+      modules: ['financialData', 'defaultKeyStatistics', 'earnings', 'recommendationTrend'],
+    }) as any
+
+    const fd = raw?.financialData ?? {}
+    const ks = raw?.defaultKeyStatistics ?? {}
+    const earnings = raw?.earnings ?? {}
+    const recTrend = raw?.recommendationTrend?.trend ?? []
+
+    // Quarterly EPS actuals vs estimates
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const earningsHistory = (earnings?.earningsChart?.quarterly ?? []).map((q: any) => ({
+      date: q.date ?? '',
+      actual: q.actual?.raw ?? q.actual ?? null,
+      estimate: q.estimate?.raw ?? q.estimate ?? null,
+    }))
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const analystTrend = recTrend.slice(0, 2).map((t: any) => ({
+      period: t.period ?? '',
+      strongBuy: t.strongBuy ?? 0,
+      buy: t.buy ?? 0,
+      hold: t.hold ?? 0,
+      sell: t.sell ?? 0,
+      strongSell: t.strongSell ?? 0,
+    }))
+
+    const pick = (obj: Record<string, unknown>, key: string): number | undefined => {
+      const v = obj[key]
+      if (v == null) return undefined
+      if (typeof v === 'number') return v
+      // yahoo-finance2 sometimes wraps values as { raw, fmt }
+      if (typeof v === 'object' && 'raw' in (v as object)) return (v as { raw: number }).raw
+      return undefined
+    }
+
+    return {
+      totalRevenue: pick(fd, 'totalRevenue'),
+      revenueGrowth: pick(fd, 'revenueGrowth'),
+      grossMargins: pick(fd, 'grossMargins'),
+      operatingMargins: pick(fd, 'operatingMargins'),
+      profitMargins: pick(fd, 'profitMargins'),
+      ebitda: pick(fd, 'ebitda'),
+      freeCashflow: pick(fd, 'freeCashflow'),
+      operatingCashflow: pick(fd, 'operatingCashflow'),
+      totalDebt: pick(fd, 'totalDebt'),
+      debtToEquity: pick(fd, 'debtToEquity'),
+      returnOnEquity: pick(fd, 'returnOnEquity'),
+      returnOnAssets: pick(fd, 'returnOnAssets'),
+      targetLow: pick(fd, 'targetLowPrice'),
+      targetMean: pick(fd, 'targetMeanPrice'),
+      targetHigh: pick(fd, 'targetHighPrice'),
+      recommendation: fd.recommendationKey ?? undefined,
+      analystCount: pick(fd, 'numberOfAnalystOpinions'),
+      enterpriseValue: pick(ks, 'enterpriseValue'),
+      pegRatio: pick(ks, 'pegRatio'),
+      earningsQuarterlyGrowth: pick(ks, 'earningsQuarterlyGrowth'),
+      beta: pick(ks, 'beta'),
+      shortPercentOfFloat: pick(ks, 'shortPercentOfFloat'),
+      heldPercentInsiders: pick(ks, 'heldPercentInsiders'),
+      heldPercentInstitutions: pick(ks, 'heldPercentInstitutions'),
+      analystTrend: analystTrend.length ? analystTrend : undefined,
+      earningsHistory: earningsHistory.length ? earningsHistory : undefined,
+    }
   }
 }
 

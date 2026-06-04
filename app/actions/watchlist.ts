@@ -1,10 +1,33 @@
 'use server'
 
+import { nanoid } from 'nanoid'
 import { db } from '@/lib/db'
 import { watchlist, positions, marketDataCache } from '@/lib/db/schema'
 import { eq, inArray } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import Anthropic from '@anthropic-ai/sdk'
+
+export async function checkWatchlist(ticker: string): Promise<{ inWatchlist: boolean; id?: string }> {
+  const [item] = await db
+    .select({ id: watchlist.id })
+    .from(watchlist)
+    .where(eq(watchlist.ticker, ticker.toUpperCase()))
+    .limit(1)
+  return item ? { inWatchlist: true, id: item.id } : { inWatchlist: false }
+}
+
+export async function addToWatchlist(ticker: string, name: string): Promise<{ id: string }> {
+  const id = nanoid()
+  await db.insert(watchlist).values({
+    id,
+    ticker: ticker.toUpperCase(),
+    name: name || null,
+    source: 'Stock Analyzer',
+    addedAt: new Date(),
+  })
+  revalidatePath('/watchlist')
+  return { id }
+}
 
 export async function refreshWatchlistData(): Promise<void> {
   const items = await db.select({ ticker: watchlist.ticker }).from(watchlist)
